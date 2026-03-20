@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function deleteThread(threadOrThreads, callback) {
@@ -47,7 +47,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("deleteThread", err);
+        log.error("deleteThread", err);
         return callback(err);
       });
 

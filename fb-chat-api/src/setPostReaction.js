@@ -7,11 +7,12 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 function formatData(resData) {
   return {
-    viewer_feedback_reaction_info: resData.feedback_react.feedback.viewer_feedback_reaction_info,
+    viewer_feedback_reaction_info:
+      resData.feedback_react.feedback.viewer_feedback_reaction_info,
     supported_reactions: resData.feedback_react.feedback.supported_reactions,
     top_reactions: resData.feedback_react.feedback.top_reactions.edges,
     reaction_count: resData.feedback_react.feedback.reaction_count,
@@ -28,7 +29,10 @@ module.exports = function (defaultFuncs, api, ctx) {
     });
 
     if (!callback) {
-      if (utils.getType(type) === "Function" || utils.getType(type) === "AsyncFunction") {
+      if (
+        utils.getType(type) === "Function" ||
+        utils.getType(type) === "AsyncFunction"
+      ) {
         callback = type;
         type = 0;
       } else {
@@ -69,14 +73,14 @@ module.exports = function (defaultFuncs, api, ctx) {
     }
 
     const form = {
-      av: ctx.userID,
+      av: ctx.i_userID || ctx.userID,
       fb_api_caller_class: "RelayModern",
       fb_api_req_friendly_name: "CometUFIFeedbackReactMutation",
       doc_id: "4769042373179384",
       variables: JSON.stringify({
         input: {
-          actor_id: ctx.userID,
-          feedback_id: Buffer.from("feedback:" + postID).toString("base64"),
+          actor_id: ctx.i_userID || ctx.userID,
+          feedback_id: new Buffer("feedback:" + postID).toString("base64"),
           feedback_reaction: type,
           feedback_source: "OBJECT",
           is_tracking_encrypted: true,
@@ -99,7 +103,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback(null, formatData(resData.data));
       })
       .catch(function (err) {
-        utils.error("setPostReaction", err);
+        log.error("setPostReaction", err);
         return callback(err);
       });
 

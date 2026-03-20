@@ -1,28 +1,28 @@
-// Nexus-FCA: Advanced and Safe Facebook Chat API
-// changeUsername.js - Change your Facebook username
+'use strict';
 
-const utils = require('../utils');
+var utils = require('../utils');
+var log = require('npmlog');
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function changeUsername(username, callback) {
-    let cb;
-    let rt = new Promise(function (resolve, reject) {
+    var cb;
+    var rt = new Promise(function (resolve, reject) {
       cb = (error, info) => info ? resolve(info) : reject(error);
     });
 
     if (typeof username == 'function') {
-      let error = 'username must be a string, and not ' + utils.getType(username);
-      utils.error('changeUsername', error);
+     var error = 'username must be a string, and not ' + utils.getType(username);
+      log.error('changeUsername', error);
       return username(error);
     }
     if (typeof callback == 'function') cb = callback;
     if (typeof username != 'string') {
-      let error = 'username must be a string, and not ' + utils.getType(username);
-      utils.error('changeUsername', error);
+      var error = 'username must be a string, and not ' + utils.getType(username);
+      log.error('changeUsername', error);
       return cb(error);
     }
 
-    let form = {
+    var form = {
       fb_api_caller_class: 'RelayModern',
       fb_api_req_friendly_name: 'useFXIMUpdateUsernameMutation',
       variables: JSON.stringify({
@@ -50,9 +50,10 @@ module.exports = function (defaultFuncs, api, ctx) {
         return cb();
       })
       .catch(function (err) {
-        utils.error('changeUsername', err);
+        log.error('changeUsername', err);
         return cb(err);
       });
+    
     return rt;
   }
 }

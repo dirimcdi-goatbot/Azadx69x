@@ -1,7 +1,7 @@
 'use strict';
 
 var utils = require('../utils.js');
-//NethWs3Dev
+var log = require('npmlog');
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function setStoryReaction(storyID, react, callback) {
@@ -53,7 +53,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         return cb();
       })
       .catch(function(err) {
-        utils.error('setPostReaction', err);
+        log.error('setPostReaction', err);
         return cb(err);
       });
 

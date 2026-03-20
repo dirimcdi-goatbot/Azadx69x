@@ -1,7 +1,7 @@
 "use strict";
 
 var utils = require("../utils");
-// @NethWs3Dev
+var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function getThreadList(start, end, type, callback) {
@@ -61,14 +61,14 @@ module.exports = function(defaultFuncs, api, ctx) {
         if (resData.error) {
           throw resData;
         }
-        utils.log("getThreadList", JSON.stringify(resData.payload.threads));
+        log.verbose("getThreadList", JSON.stringify(resData.payload.threads));
         return callback(
           null,
           (resData.payload.threads || []).map(utils.formatThread)
         );
       })
       .catch(function(err) {
-        utils.error("getThreadList", err);
+        log.error("getThreadList", err);
         return callback(err);
       });
   };

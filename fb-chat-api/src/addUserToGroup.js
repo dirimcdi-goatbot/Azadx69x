@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function addUserToGroup(userID, threadID, callback) {
@@ -51,7 +51,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     const form = {
       client: "mercury",
       action_type: "ma-type:log-message",
-      author: "fbid:" + (ctx.userID),
+      author: "fbid:" + (ctx.i_userID || ctx.userID),
       thread_id: "",
       timestamp: Date.now(),
       timestamp_absolute: "Today",
@@ -106,7 +106,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("addUserToGroup", err);
+        log.error("addUserToGroup", err);
         return callback(err);
       });
 

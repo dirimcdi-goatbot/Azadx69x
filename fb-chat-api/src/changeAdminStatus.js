@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function changeAdminStatus(threadID, adminIDs, adminStatus, callback) {
@@ -94,7 +94,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         callback();
       })
       .catch(function (err) {
-        utils.error("changeAdminStatus", err);
+        log.error("changeAdminStatus", err);
         return callback(err);
       });
 

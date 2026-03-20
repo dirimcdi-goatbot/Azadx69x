@@ -1,15 +1,17 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
+
+function isValidEmoji(str) {
+  if (str === "") return true;
+
+  const emojiRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu;
+  return emojiRegex.test(str);
+}
 
 module.exports = function (defaultFuncs, api, ctx) {
-  return function setMessageReaction(
-    reaction,
-    messageID,
-    callback,
-    forceCustomReaction,
-  ) {
+  return function setMessageReaction(reaction, messageID, callback, forceCustomReaction) {
     let resolveFunc = function () {};
     let rejectFunc = function () {};
     const returnPromise = new Promise(function (resolve, reject) {
@@ -24,6 +26,25 @@ module.exports = function (defaultFuncs, api, ctx) {
         }
         resolveFunc(friendList);
       };
+    }
+
+    try {
+      if (typeof reaction === "string" && reaction.length > 1) {
+        const emojis = Array.from(
+          reaction.match(/([\uD800-\uDBFF][\uDC00-\uDFFF]|\S)/g) || []
+        );
+        if (emojis.length > 1) {
+          reaction = emojis.join("‍");
+        }
+      }
+    } catch (err) {
+      log.error("setReaction", "Emoji parsing failed:", err);
+    }
+
+    const isValidCustomEmoji = isValidEmoji(reaction);
+
+    if (forceCustomReaction && typeof reaction === "string") {
+      reaction = reaction.normalize("NFC");
     }
 
     switch (reaction) {
@@ -73,16 +94,18 @@ module.exports = function (defaultFuncs, api, ctx) {
         reaction = "\uD83D\uDC97";
         break;
       default:
-        if (forceCustomReaction) {
+        if (forceCustomReaction && isValidCustomEmoji) {
           break;
+        } else if (!isValidCustomEmoji) {
+          return callback({ error: "Reaction is not a valid emoji." });
         }
-        return callback({ error: "Reaction is not a valid emoji." });
+        break;
     }
 
     const variables = {
       data: {
         client_mutation_id: ctx.clientMutationId++,
-        actor_id: ctx.userID,
+        actor_id: ctx.i_userID || ctx.userID,
         action: reaction == "" ? "REMOVE_REACTION" : "ADD_REACTION",
         message_id: messageID,
         reaction: reaction,
@@ -113,7 +136,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         callback(null);
       })
       .catch(function (err) {
-        utils.error("setReaction", err);
+        log.error("setReaction", err);
         return callback(err);
       });
 

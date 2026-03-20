@@ -6,7 +6,7 @@
  */
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 function formatMessage(threadID, data) {
   switch (data.__typename) {
@@ -294,7 +294,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         }
       })
       .catch((err) => {
-        utils.error("getMessage", err);
+        log.error("getMessage", err);
         callback(err);
       });
 

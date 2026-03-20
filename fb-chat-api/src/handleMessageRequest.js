@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function handleMessageRequest(threadID, accept, callback) {
@@ -56,7 +56,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("handleMessageRequest", err);
+        log.error("handleMessageRequest", err);
         return callback(err);
       });
 

@@ -1,7 +1,7 @@
 "use strict";
 
 var utils = require("../utils");
-// @NethWs3Dev
+var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function unFriend(userID, callback) {
@@ -43,7 +43,7 @@ module.exports = function(defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function(err) {
-        utils.error("unfriend", err);
+        log.error("unfriend", err);
         return callback(err);
       });
 

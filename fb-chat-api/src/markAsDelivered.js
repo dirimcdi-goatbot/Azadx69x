@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function markAsDelivered(threadID, messageID, callback) {
@@ -46,7 +46,10 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("markAsDelivered", err);
+        log.error("markAsDelivered", err);
+        if (utils.getType(err) == "Object" && err.error === "Not logged in.") {
+          ctx.loggedIn = false;
+        }
         return callback(err);
       });
 

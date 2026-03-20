@@ -1,4 +1,6 @@
 var utils = require("../utils");
+var log = require("npmlog");
+var bluebird = require("bluebird");
 
 module.exports = function (defaultFuncs, api, ctx) {
   function uploadAttachment(attachments, callback) {
@@ -43,12 +45,13 @@ module.exports = function (defaultFuncs, api, ctx) {
     }
 
     // resolve all promises
-    Promise.all(uploads)
+    bluebird
+      .all(uploads)
       .then(function (resData) {
         callback(null, resData);
       })
       .catch(function (err) {
-        utils.error("uploadAttachment", err);
+        log.error("uploadAttachment", err);
         return callback(err);
       });
   }
@@ -143,14 +146,14 @@ module.exports = function (defaultFuncs, api, ctx) {
         const offset = msg.body.indexOf(tag, mention.fromIndex || 0);
 
         if (offset < 0) {
-          utils.warn(
+          log.warn(
             "handleMention",
             'Mention for "' + tag + '" not found in message string.',
           );
         }
 
         if (mention.id == null) {
-          utils.warn("handleMention", "Mention id should be non-null.");
+          log.warn("handleMention", "Mention id should be non-null.");
         }
 
         const id = mention.id || 0;
@@ -206,21 +209,22 @@ module.exports = function (defaultFuncs, api, ctx) {
       task.payload = JSON.stringify(task.payload);
     });
     form.payload = JSON.stringify(form.payload);
+
     return mqttClient.publish(
       "/ls_req",
-      JSON.stringify(form),
-      function (err, data) {
+      JSON.stringify(form), (err, data) => {
         if (err) {
-          utils.error("Error publishing message: ", err);
+          console.error("Error publishing message: ", err);
           callback(err);
         } else {
+          console.log("Message published successfully with data: ", data);
           callback(null, data);
         }
       },
     );
   }
 
-  return function sendMessageMqtt(msg, threadID, callback, replyToMessage) {
+  return async function sendMessageMqtt(msg, threadID, callback, replyToMessage) {
     if (
       !callback &&
       (utils.getType(threadID) === "Function" ||

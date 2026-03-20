@@ -1,80 +1,109 @@
 "use strict";
-var utils = require("../utils");
-var log = require("npmlog");
+
+const utils = require("../utils");
+const log = require("npmlog");
+
+function formatData(data) {
+  const retObj = {};
+
+  for (const prop in data) {
+    if (!data.hasOwnProperty(prop)) continue;
+
+    const innerObj = data[prop];
+
+    const userData = {
+      id: innerObj.id || prop,
+      name: innerObj.name || null,
+      firstName: innerObj.firstName || null,
+      vanity: innerObj.vanity || null,
+      thumbSrc: innerObj.thumbSrc || null,
+      profileUrl: innerObj.uri || null,
+      gender: innerObj.gender || null,
+      i18nGender: innerObj.i18nGender || null,
+      type: innerObj.type || null,
+      isFriend: innerObj.is_friend || false,
+      isBirthday: !!innerObj.is_birthday,
+      isBlocked: !!innerObj.is_blocked,
+      isNonfriendMessengerContact: !!innerObj.is_nonfriend_messenger_contact,
+      mThumbSrcSmall: innerObj.mThumbSrcSmall || null,
+      mThumbSrcLarge: innerObj.mThumbSrcLarge || null,
+      dir: innerObj.dir || null,
+      alternateName: innerObj.alternateName || null,
+      searchTokens: innerObj.searchTokens || [],
+      extra: {}
+    };
+
+    const excludedKeys = Object.keys(userData).concat([
+      "id",
+      "name",
+      "firstName",
+      "vanity",
+      "thumbSrc",
+      "uri",
+      "gender",
+      "i18nGender",
+      "type",
+      "is_friend",
+      "is_birthday",
+      "is_blocked",
+      "is_nonfriend_messenger_contact",
+      "mThumbSrcSmall",
+      "mThumbSrcLarge",
+      "dir",
+      "alternateName",
+      "searchTokens"
+    ]);
+
+    for (const key in innerObj) {
+      if (!excludedKeys.includes(key)) {
+        userData.extra[key] = innerObj[key];
+      }
+    }
+
+    retObj[prop] = userData;
+  }
+
+  return retObj;
+}
+
 module.exports = function (defaultFuncs, api, ctx) {
-	function formatData(data) {
-		const retObj = {};
-		for (const actor of data.messaging_actors || []) {
-			retObj[actor.id] = {
-				name: actor.name,
-				firstName: actor.short_name || null,
-				vanity: actor.username || null,
-				thumbSrc: actor.big_image_src?.uri || null,
-				profileUrl: actor.url || null,
-				gender: actor.gender || null,
-				type: actor.__typename || null,
-				isFriend: actor.is_viewer_friend || false,
-				isMessengerUser: actor.is_messenger_user || false,
-				isMessageBlockedByViewer: actor.is_message_blocked_by_viewer || false,
-				workInfo: actor.work_info || null,
-				messengerStatus: actor.messenger_account_status_category || null
-			};
-		}
-		return retObj;
-	}
-	return function getUserInfoGraphQL(id, callback) {
-		let resolveFunc, rejectFunc;
-		const returnPromise = new Promise((resolve, reject) => {
-			resolveFunc = resolve;
-			rejectFunc = reject;
-		});
-		if (typeof callback !== "function") {
-			callback = (err, data) => {
-				if (err) return rejectFunc(err);
-				resolveFunc(data);
-			};
-		}
-		const ids = Array.isArray(id) ? id : [id];
-		var form = {
-			queries: JSON.stringify({
-				o0: {
-					doc_id: "5009315269112105",
-					query_params: {
-						ids: ids
-					}
-				}
-			}),
-			batch_name: "MessengerParticipantsFetcher"
-		};
-		defaultFuncs
-			.post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
-			.then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-			.then(function(resData) {
-				if (!resData || resData.length === 0) {
-					throw new Error("Empty response from server");
-				}
-				if (resData.error) {
-					throw resData.error;
-				}
-				const response = resData[0];
-				if (!response || !response.o0) {
-					throw new Error("Invalid response format");
-				}
-				if (response.o0.errors && response.o0.errors.length > 0) {
-					throw new Error(response.o0.errors[0].message || "GraphQL error");
-				}
-				const result = response.o0.data;
-				if (!result || !result.messaging_actors || result.messaging_actors.length === 0) {
-					log.warn("getUserInfo", "No user data found for the provided ID(s)");
-					return callback(null, {});
-				}
-				const formattedData = formatData(result);
-				return callback(null, formattedData);
-			})
-			.catch(err => {
-				log.error("getUserInfoGraphQL", "Error: " + (err.message || "Unknown error occurred"));
-				callback(err);
-			});	
-		return returnPromise;
-	};
+  return function getUserInfo(id, callback) {
+    let resolveFunc = function () {};
+    let rejectFunc = function () {};
+    const returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
+    if (!callback) {
+      callback = function (err, result) {
+        if (err) return rejectFunc(err);
+        resolveFunc(result);
+      };
+    }
+
+    if (utils.getType(id) !== "Array") {
+      id = [id];
+    }
+
+    const form = {};
+    id.forEach((v, i) => {
+      form[`ids[${i}]`] = v;
+    });
+
+    defaultFuncs
+      .post("https://www.facebook.com/chat/user_info/", ctx.jar, form)
+      .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+      .then((resData) => {
+        if (resData.error) throw resData;
+        const formatted = formatData(resData.payload?.profiles || {});
+        callback(null, formatted);
+      })
+      .catch((err) => {
+        log.error("getUserInfo", err);
+        callback(err);
+      });
+
+    return returnPromise;
+  };
 };

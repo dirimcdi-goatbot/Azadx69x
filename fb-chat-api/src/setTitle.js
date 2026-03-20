@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function setTitle(newTitle, threadID, callback) {
@@ -33,7 +33,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     const form = {
       client: "mercury",
       action_type: "ma-type:log-message",
-      author: "fbid:" + (ctx.userID),
+      author: "fbid:" + (ctx.i_userID || ctx.userID),
       author_email: "",
       coordinates: "",
       timestamp: Date.now(),
@@ -81,7 +81,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("setTitle", err);
+        log.error("setTitle", err);
         return callback(err);
       });
 

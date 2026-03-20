@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function createPoll(title, threadID, options, callback) {
@@ -62,7 +62,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("createPoll", err);
+        log.error("createPoll", err);
         return callback(err);
       });
 

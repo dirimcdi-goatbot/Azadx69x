@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   // muteSecond: -1=permanent mute, 0=unmute, 60=one minute, 3600=one hour, etc.
@@ -43,7 +43,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("muteThread", err);
+        log.error("muteThread", err);
         return callback(err);
       });
 

@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 // [almost] copy pasted from one of FB's minified file (GenderConst)
 const GENDERS = {
@@ -61,7 +61,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         "https://www.facebook.com/chat/user_info_all",
         ctx.jar,
         {},
-        { viewer: ctx.userID },
+        { viewer: ctx.i_userID || ctx.userID },
       )
       .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
       .then(function (resData) {
@@ -74,7 +74,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         callback(null, formatData(resData.payload));
       })
       .catch(function (err) {
-        utils.error("getFriendsList", err);
+        log.error("getFriendsList", err);
         return callback(err);
       });
 

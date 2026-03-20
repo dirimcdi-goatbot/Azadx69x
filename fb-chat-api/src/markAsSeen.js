@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function markAsRead(seen_timestamp, callback) {
@@ -49,7 +49,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("markAsSeen", err);
+        log.error("markAsSeen", err);
         if (utils.getType(err) == "Object" && err.error === "Not logged in.") {
           ctx.loggedIn = false;
         }

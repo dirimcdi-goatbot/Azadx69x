@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function handleFriendRequest(userID, accept, callback) {
@@ -28,7 +28,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     }
 
     const form = {
-      viewer_id: ctx.userID,
+      viewer_id: ctx.i_userID || ctx.userID,
       "frefs[0]": "jwl",
       floc: "friend_center_requests",
       ref: "/reqs.php",
@@ -39,16 +39,16 @@ module.exports = function (defaultFuncs, api, ctx) {
       .post("https://www.facebook.com/requests/friends/ajax/", ctx.jar, form)
       .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
       .then(function (resData) {
-        if (resData.err) {
+        if (resData.payload.err) {
           throw {
-            err: resData.err
+            err: resData.payload.err,
           };
         }
 
         return callback();
       })
       .catch(function (err) {
-        utils.error("handleFriendRequest", err);
+        log.error("handleFriendRequest", err);
         return callback(err);
       });
 

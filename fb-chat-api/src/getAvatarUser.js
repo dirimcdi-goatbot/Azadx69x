@@ -1,25 +1,26 @@
-// Nexus-FCA: Advanced and Safe Facebook Chat API
-// getAvatarUser.js - Get user avatar URLs
+"use strict";
 
-const utils = require('../utils');
+var utils = require('./../utils.js');
+var log = require('npmlog');
 
 module.exports = function (defaultFuncs, api, ctx) {
   function handleAvatar(userIDs, height, width) {
-    let cb;
-    const uploads = [];
-    const rtPromise = new Promise(function (resolve, reject) {
+    var cb;
+    var uploads = [];
+    var rtPromise = new Promise(function (resolve, reject) {
       cb = (error, data) => data ? resolve(data) : reject(error);
     });
 
+    // Getting User Data From GraphAPI In The Loop
     userIDs.map(function (v) {
-      const mainPromise = defaultFuncs
+      var mainPromise = defaultFuncs
         .get(`https://graph.facebook.com/${v}/picture?height=${height}&width=${width}&redirect=false&access_token=` + ctx.access_token, ctx.jar)
         .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
         .then(function (res) {
           return { 
             userID: v, 
             url: res.data.url 
-          };
+          }
         })
         .catch(function (err) {
           return cb(err);
@@ -27,6 +28,7 @@ module.exports = function (defaultFuncs, api, ctx) {
       uploads.push(mainPromise);
     });
 
+    // resolve all promises
     Promise
       .all(uploads)
       .then(function (res) {
@@ -43,32 +45,34 @@ module.exports = function (defaultFuncs, api, ctx) {
   }
   
   return function getAvatarUser(userIDs, size = [1500, 1500], callback) {
-    let resolveFunc;
-    let rejectFunc;
-    let promise = null;
-    if (typeof callback !== 'function') {
-      promise = new Promise((resolve, reject) => {
-        resolveFunc = resolve;
-        rejectFunc = reject;
-      });
+    var cb;
+    var rtPromise = new Promise(function (resolve, reject) {
+      cb = (err, res) => res ? resolve(res) : reject(err);
+    });
+
+    (typeof size == 'string' || typeof size == 'number') ? size = [size, size] : Array.isArray(size) && size.length == 1 ? size = [size[0], size[0]] : null;
+
+    if (typeof size == 'function') {
+      callback = size;
+      size = [1500, 1500];
     }
-
+    if (typeof callback == 'function') cb = callback;
     if (!Array.isArray(userIDs)) userIDs = [userIDs];
-
-    const resolver = (err, res) => {
-      if (typeof callback === 'function') {
-        callback(err, res);
-      }
-      if (promise) {
-        if (err) rejectFunc(err);
-        else resolveFunc(res);
-      }
+    var [height, width] = size;
+    if (!ctx.access_token) {
+      log.error('getAvatarUser', 'Cant get access_token');
+      return cb('Cant get access_token');
     };
+    
+    handleAvatar(userIDs, height, width)
+      .then(function (res) {
+        return cb(null, res);
+      })
+      .catch(function (err) {
+        log.error('getAvatarUser', err);
+        return cb(err);
+      });
 
-    handleAvatar(userIDs, size[0], size[1])
-      .then(res => resolver(null, res))
-      .catch(resolver);
-
-    return promise;
-  };
-};
+    return rtPromise;
+  }
+}

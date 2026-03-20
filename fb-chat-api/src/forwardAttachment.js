@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function forwardAttachment(attachmentID, userOrUsers, callback) {
@@ -51,7 +51,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("forwardAttachment", err);
+        log.error("forwardAttachment", err);
         return callback(err);
       });
 

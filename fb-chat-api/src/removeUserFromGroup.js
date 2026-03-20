@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function removeUserFromGroup(userID, threadID, callback) {
@@ -70,7 +70,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("removeUserFromGroup", err);
+        log.error("removeUserFromGroup", err);
         return callback(err);
       });
 

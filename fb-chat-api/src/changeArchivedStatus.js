@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function changeArchivedStatus(threadOrThreads, archive, callback) {
@@ -46,7 +46,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("changeArchivedStatus", err);
+        log.error("changeArchivedStatus", err);
         return callback(err);
       });
 

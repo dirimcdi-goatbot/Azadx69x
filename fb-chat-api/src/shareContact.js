@@ -58,7 +58,7 @@ module.exports = function(defaultFuncs, api, ctx) {
 
 var utils = require("../utils");
 
-// @NethWs3Dev
+var log = require("npmlog");
 
 
 module.exports = function (defaultFuncs, api, ctx) {

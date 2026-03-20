@@ -1,7 +1,7 @@
 
 'use strict';
 
-const { generateOfflineThreadingID } = require('../utils');
+const { generateOfflineThreadingID, getCurrentTimestamp } = require('../utils');
 
 function isCallable(func) {
   try {
@@ -27,7 +27,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     const taskPayload = {
       thread_key: threadID,
       message_id: messageID,
-      timestamp_ms: Date.now(),
+      timestamp_ms: getCurrentTimestamp(),
     };
 
     const task = {

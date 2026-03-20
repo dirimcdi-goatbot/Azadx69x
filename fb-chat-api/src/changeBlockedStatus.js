@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function changeBlockedStatus(userID, block, callback) {
@@ -41,7 +41,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        utils.error("changeBlockedStatus", err);
+        log.error("changeBlockedStatus", err);
         return callback(err);
       });
     return returnPromise;

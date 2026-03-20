@@ -1,7 +1,7 @@
 "use strict";
 
 var utils = require("../utils");
-// @NethWs3Dev
+var log = require("npmlog");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function getThreadHistory(threadID, amount, timestamp, callback) {
@@ -84,7 +84,7 @@ module.exports = function(defaultFuncs, api, ctx) {
           });
         })
         .catch(function(err) {
-          utils.error("getThreadHistory", err);
+          log.error("getThreadHistory", err);
           return callback(err);
         });
     });

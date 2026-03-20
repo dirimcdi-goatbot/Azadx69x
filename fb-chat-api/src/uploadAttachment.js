@@ -1,5 +1,5 @@
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   function upload(attachments, callback) {
@@ -49,7 +49,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         callback(null, resData);
       })
       .catch(function (err) {
-        utils.error("uploadAttachment", err);
+        log.error("uploadAttachment", err);
         return callback(err);
       });
   }

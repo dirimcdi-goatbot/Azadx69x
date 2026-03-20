@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function markAsReadAll(callback) {
@@ -13,38 +13,43 @@ module.exports = function (defaultFuncs, api, ctx) {
     });
 
     if (!callback) {
-      callback = function (err, friendList) {
+      callback = function (err) {
         if (err) {
           return rejectFunc(err);
         }
-        resolveFunc(friendList);
+        resolveFunc();
       };
     }
 
-    const form = {
-      folder: "inbox",
-    };
+    const folders = ["INBOX", "PENDING", "OTHERS"];
 
-    defaultFuncs
-      .post(
-        "https://www.facebook.com/ajax/mercury/mark_folder_as_read.php",
-        ctx.jar,
-        form,
-      )
-      .then(utils.saveCookies(ctx.jar))
-      .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-      .then(function (resData) {
-        if (resData.error) {
-          throw resData;
-        }
-
+    function markFolderAsRead(index) {
+      if (index >= folders.length) {
         return callback();
-      })
-      .catch(function (err) {
-        utils.error("markAsReadAll", err);
-        return callback(err);
-      });
+      }
 
+      const form = { folder: folders[index] };
+      defaultFuncs
+        .post(
+          "https://www.facebook.com/ajax/mercury/mark_folder_as_read.php",
+          ctx.jar,
+          form
+        )
+        .then(utils.saveCookies(ctx.jar))
+        .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+        .then((resData) => {
+          if (resData.error) {
+            throw resData;
+          }
+          markFolderAsRead(index + 1);
+        })
+        .catch((err) => {
+          log.error("markAsReadAll", err);
+          return callback(err);
+        });
+    }
+
+    markFolderAsRead(0);
     return returnPromise;
   };
 };

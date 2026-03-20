@@ -1,7 +1,7 @@
 'use strict';
 
-var utils = require('../utils');
-//NethWs3Dev
+var utils = require('../utils.js');
+var log = require('npmlog');
 var EventEmitter = require('node:events');
 
 function format(res, globalCallback) {
@@ -51,7 +51,7 @@ module.exports = function (defaultFuncs, api, ctx) {
           return format(res.data.viewer, globalCallback);
         })
         .catch(function (err) {
-          utils.error('listenNotification', err);
+          log.error('listenNotification', err);
           clearInterval(interval);
           interval = void 0;
           return globalCallback(err);

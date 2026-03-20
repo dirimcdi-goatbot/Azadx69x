@@ -1,7 +1,7 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
+const log = require("npmlog");
 
 module.exports = function (defaultFuncs, api, ctx) {
   return function getThreadPictures(threadID, offset, limit, callback) {
@@ -71,7 +71,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         callback(null, resData);
       })
       .catch(function (err) {
-        utils.error("Error in getThreadPictures", err);
+        log.error("Error in getThreadPictures", err);
         callback(err);
       });
     return returnPromise;

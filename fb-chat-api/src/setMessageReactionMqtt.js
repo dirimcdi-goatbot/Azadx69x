@@ -1,7 +1,6 @@
-
 'use strict';
 
-const { generateOfflineThreadingID } = require('../utils');
+const { generateOfflineThreadingID, getCurrentTimestamp } = require('../utils');
 
 function isCallable(func) {
   try {
@@ -17,14 +16,16 @@ module.exports = function (defaultFuncs, api, ctx) {
     if (!ctx.mqttClient) {
       throw new Error('Not connected to MQTT');
     }
-    
+
+    ctx.wsReqNumber = ctx.wsReqNumber || 0;
+    ctx.wsTaskNumber = ctx.wsTaskNumber || 0;
 
     ctx.wsReqNumber += 1;
-    ctx.wsTaskNumber += 1;
+    let taskNumber = ++ctx.wsTaskNumber;
 
     const taskPayload = {
       thread_key: threadID,
-      timestamp_ms: Date.now(),
+      timestamp_ms: getCurrentTimestamp(),
       message_id: messageID,
       reaction: reaction,
       actor_id: ctx.userID,
@@ -38,7 +39,7 @@ module.exports = function (defaultFuncs, api, ctx) {
       label: '29',
       payload: JSON.stringify(taskPayload),
       queue_name: JSON.stringify(['reaction', messageID]),
-      task_id: ctx.wsTaskNumber,
+      task_id: taskNumber,
     };
 
     const content = {
@@ -54,9 +55,29 @@ module.exports = function (defaultFuncs, api, ctx) {
     };
 
     if (isCallable(callback)) {
-      ctx.reqCallbacks[ctx.wsReqNumber] = callback;
+      ctx["tasks"] = ctx["tasks"] || new Map();
+      ctx["tasks"].set(ctx.wsReqNumber, {
+        type: 'message_reaction',
+        callback: callback
+      });
     }
 
     ctx.mqttClient.publish('/ls_req', JSON.stringify(content), { qos: 1, retain: false });
+
+    if (!isCallable(callback)) {
+      return new Promise((resolve, reject) => {
+        ctx["tasks"] = ctx["tasks"] || new Map();
+        ctx["tasks"].set(ctx.wsReqNumber, {
+          type: 'message_reaction',
+          callback: (err, data) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(data);
+            }
+          }
+        });
+      });
+    }
   };
 };

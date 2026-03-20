@@ -1,20 +1,17 @@
 "use strict";
 
-const log = require("npmlog");
 const utils = require("../utils");
-const { isReadableStream } = require("../utils");
-const { parseAndCheckLogin } = require("../utils");
-const { formatID, getType } = require("../utils");
+const log = require("npmlog");
 
-module.exports = function(defaultFuncs, api, ctx) {
+module.exports = function (defaultFuncs, api, ctx) {
   function handleUpload(image, callback) {
     const uploads = [];
 
     const form = {
-      profile_id: ctx.userID,
+      profile_id: ctx.i_userID || ctx.userID,
       photo_source: 57,
-      av: ctx.userID,
-      file: image
+      av: ctx.i_userID || ctx.userID,
+      file: image,
     };
 
     uploads.push(
@@ -23,22 +20,23 @@ module.exports = function(defaultFuncs, api, ctx) {
           "https://www.facebook.com/profile/picture/upload/",
           ctx.jar,
           form,
-          {}
+          {},
         )
-        .then(parseAndCheckLogin(ctx, defaultFuncs))
-        .then(function(resData) {
+        .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+        .then(function (resData) {
           if (resData.error) {
             throw resData;
           }
           return resData;
-        })
+        }),
     );
 
+    // resolve all promises
     Promise.all(uploads)
-      .then(function(resData) {
+      .then(function (resData) {
         callback(null, resData);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         log.error("handleUpload", err);
         return callback(err);
       });
@@ -48,16 +46,16 @@ module.exports = function(defaultFuncs, api, ctx) {
     image,
     caption = "",
     timestamp = null,
-    callback
+    callback,
   ) {
-    let resolveFunc = function() {};
-    let rejectFunc = function() {};
-    const returnPromise = new Promise(function(resolve, reject) {
+    let resolveFunc = function () {};
+    let rejectFunc = function () {};
+    const returnPromise = new Promise(function (resolve, reject) {
       resolveFunc = resolve;
       rejectFunc = reject;
     });
 
-    if (!timestamp && getType(caption) === "Number") {
+    if (!timestamp && utils.getType(caption) === "Number") {
       timestamp = caption;
       caption = "";
     }
@@ -65,8 +63,8 @@ module.exports = function(defaultFuncs, api, ctx) {
     if (
       !timestamp &&
       !callback &&
-      (getType(caption) == "Function" ||
-        getType(caption) == "AsyncFunction")
+      (utils.getType(caption) == "Function" ||
+        utils.getType(caption) == "AsyncFunction")
     ) {
       callback = caption;
       caption = "";
@@ -74,16 +72,20 @@ module.exports = function(defaultFuncs, api, ctx) {
     }
 
     if (!callback)
-      callback = function(err, data) {
-        if (err) return rejectFunc(err);
+      callback = function (err, data) {
+        if (err) {
+          return rejectFunc(err);
+        }
         resolveFunc(data);
       };
 
-    if (!isReadableStream(image))
+    if (!utils.isReadableStream(image))
       return callback("Image is not a readable stream");
 
-    handleUpload(image, function(err, payload) {
-      if (err) return callback(err);
+    handleUpload(image, function (err, payload) {
+      if (err) {
+        return callback(err);
+      }
 
       const form = {
         av: ctx.i_userID || ctx.userID,
@@ -102,28 +104,28 @@ module.exports = function(defaultFuncs, api, ctx) {
               height: 1,
               width: 1,
               x: 0,
-              y: 0
+              y: 0,
             },
             skip_cropping: true,
             actor_id: ctx.i_userID || ctx.userID,
-            client_mutation_id: Math.round(Math.random() * 19).toString()
+            client_mutation_id: Math.round(Math.random() * 19).toString(),
           },
           isPage: false,
           isProfile: true,
-          scale: 3
-        })
+          scale: 3,
+        }),
       };
 
       defaultFuncs
         .post("https://www.facebook.com/api/graphql/", ctx.jar, form)
-        .then(parseAndCheckLogin(ctx, defaultFuncs))
-        .then(function(resData) {
+        .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+        .then(function (resData) {
           if (resData.errors) {
             throw resData;
           }
           return callback(null, resData[0].data.profile_picture_set);
         })
-        .catch(function(err) {
+        .catch(function (err) {
           log.error("changeAvatar", err);
           return callback(err);
         });
